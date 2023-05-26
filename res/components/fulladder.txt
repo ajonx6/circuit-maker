@@ -1,0 +1,23 @@
+fulladder
+c xor 1
+c and 2
+c xor 3
+c and 4 
+c or 5
+p I
+p I
+p I
+p O
+p O
+w 0 0 0 1
+w 0 0 0 2
+w 1 0 1 1
+w 1 0 1 2
+w 2 0 1 3
+w 2 0 1 4
+w 2 1 0 3
+w 2 1 0 4
+w 2 4 0 5
+w 2 2 1 5 
+w 2 3 3 0
+w 2 5 4 0
