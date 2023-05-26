@@ -28,7 +28,7 @@ public class Circuit {
     }
 
     public Pin addPin(int type) {
-        Pin p = new Pin(pins.size(), circuitID);
+        Pin p = new Pin(pins.size(), circuitID, type);
         return addPin(p, type);
     }
 
@@ -77,25 +77,63 @@ public class Circuit {
     }
 
     public boolean tick() {
-        boolean changed = false;
-        for (Wire wire : wires) {
-            boolean previous = false;
-            if (wire.getPid2().getCircuitID() == circuitID) {
-                previous = getPinByID(wire.getPid2()).getState();
-                getPinByID(wire.getPid2()).setState(getPinByID(wire.getPid1()).getState());
-                changed |= (previous ^ getPinByID(wire.getPid2()).getState());
-            }
-            else {
-                previous = getCircuitByID(wire.getPid2().getCircuitID()).getPinByID(wire.getPid2()).getState();
-                getCircuitByID(wire.getPid2().getCircuitID()).getPinByID(wire.getPid2()).setState(getPinByID(wire.getPid1()).getState());
-                changed |= (previous ^ getCircuitByID(wire.getPid2().getCircuitID()).getPinByID(wire.getPid2()).getState());
-            }
+        List<Pin> currentlyLit = new ArrayList<>();
+        for (Pin p : pins) {
+            if (p.getState()) currentlyLit.add(p);
         }
+        HashMap<IDPair, Boolean> nextState = new HashMap<>();
+        for (Wire wire : wires) {
+            if (!nextState.containsKey(wire.getPid2())) nextState.put(wire.getPid2(), false);
+            nextState.put(wire.getPid2(), nextState.get(wire.getPid2()) || getPinByID(wire.getPid1()).getState());
+            // if (wire.getPid2().getCircuitID() == circuitID) {
+            //     if (!nextState.containsKey(wire.getPid2())) nextState.put(wire.getPid2(), false);
+            //     nextState.put(wire.getPid2(), getPinByID(wire.getPid1()).getState());
+            // }
+            // else {
+            //     if (!nextState.containsKey(wire.getPid2())) nextState.put(wire.getPid2(), false);
+            //     getCircuitByID(wire.getPid2().getCircuitID()).getPinByID(wire.getPid2()).setState(getPinByID(wire.getPid1()).getState());
+            //     nextState.put(wire.getPid2(), getPinByID(wire.getPid2()).setState(getPinByID(wire.getPid1()).getState());
+            // }
+        }
+
+        boolean changed = false;
+        for (IDPair ids : nextState.keySet()) {
+            Pin p = getPinByID(ids);
+            if (p.getState() != nextState.get(ids)) changed = true;
+            p.setState(nextState.get(ids));
+        }
+        
         for (Circuit circuit : circuits) {
             changed |= circuit.tick();
         }
+        
         if (parent == null && changed) tick();
         return changed;
+    }
+
+    public List<Wire> interactWithPin(Pin pin) {
+        List<Wire> wireIDsToDisconnect = new ArrayList<>();
+        
+        if (inputPins.contains(pin)) {
+            pin.flip();
+        } else if (!outputPins.contains(pin)) {
+            for (Wire w : wires) {
+                if (w.getPid1().equals(pin.getIds()) || w.getPid2().equals(pin.getIds())) {
+                    wireIDsToDisconnect.add(w);
+                }
+            }
+            for (Wire w : wireIDsToDisconnect) {
+                wires.remove(w);
+            }
+            pins.remove(pin);
+            inputPins.remove(pin);
+            outputPins.remove(pin);
+        }
+        return wireIDsToDisconnect;
+    }
+
+    public void removeWire(Wire wire) {
+        wires.remove(wire);
     }
 
     public Pin getPinByID(IDPair ids) {

@@ -9,6 +9,7 @@ import circuit.input.MouseInput;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferStrategy;
 import java.util.Scanner;
 
@@ -32,21 +33,22 @@ public class Game extends Canvas implements Runnable {
     private Game() {
         renderer = Renderer.getInstance();
         editor = new Editor();
+        editor.initIOPins(2, 3);
         
         Circuit.loadAllCircuits();
-        Circuit fulladder = Circuit.CIRCUITS.get("fulladder").copy();
-        fulladder.print();
-
-        Scanner scanner = new Scanner(System.in);
-        while (true) {
-            String line = scanner.nextLine();
-            if (line.equals("done")) break;
-            int pinID = Integer.parseInt(line);
-            fulladder.getInputPins().get(pinID).setState(!fulladder.getInputPins().get(pinID).getState());
-            fulladder.tick();
-            System.out.println("\n\n");
-            fulladder.print();
-        }
+        // Circuit fulladder = Circuit.CIRCUITS.get("fulladder").copy();
+        // fulladder.print();
+        //
+        // Scanner scanner = new Scanner(System.in);
+        // while (true) {
+        //     String line = scanner.nextLine();
+        //     if (line.equals("done")) break;
+        //     int pinID = Integer.parseInt(line);
+        //     fulladder.getInputPins().get(pinID).setState(!fulladder.getInputPins().get(pinID).getState());
+        //     fulladder.tick();
+        //     System.out.println("\n\n");
+        //     fulladder.print();
+        // }
         
         KeyInput ki = new KeyInput();
         MouseInput mi = new MouseInput();
@@ -114,6 +116,19 @@ public class Game extends Canvas implements Runnable {
 
     public void tick() {
         if (KeyInput.wasPressed(KeyEvent.VK_ESCAPE)) System.exit(0);
+        
+        if (MouseInput.wasPressed(MouseEvent.BUTTON1)) {
+            editor.event(MouseEvent.BUTTON1, "CLICK");
+        }
+        if (MouseInput.wasPressed(MouseEvent.BUTTON2)) {
+            editor.event(MouseEvent.BUTTON2, "CLICK");
+        }
+        if (MouseInput.wasPressed(MouseEvent.BUTTON3)) {
+            editor.event(MouseEvent.BUTTON3, "CLICK");
+        }
+        if (MouseInput.isPressed(MouseEvent.BUTTON3)) {
+            editor.event(MouseEvent.BUTTON3, "PRESS");
+        }
 
         KeyInput.tick();
         MouseInput.tick(Time.getFrameTimeInSeconds());
@@ -134,6 +149,8 @@ public class Game extends Canvas implements Runnable {
         renderer.fillRect(0, 0, WIDTH, HEIGHT - CIRCUIT_LIST_HEIGHT, 0x555555);
         renderer.fillRect(0, HEIGHT - CIRCUIT_LIST_HEIGHT, WIDTH, HEIGHT, 0x777777);
         
+        editor.render(renderer);
+
         renderer.finish();
     }
 }

@@ -4,6 +4,8 @@ public class Wire {
     private IDPair ids;
     private IDPair pid1, pid2;
 
+    public Wire() {}
+    
     public Wire(int id, int cid) {
         ids = new IDPair(id, cid);
     }
@@ -19,6 +21,11 @@ public class Wire {
     public IDPair getIds() {
         return ids;
     }
+
+    public void setIds(int id, int cid) {
+        ids = new IDPair(id, cid);
+    }
+
 
     public IDPair getPid1() {
         return pid1;
