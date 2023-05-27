@@ -43,6 +43,10 @@ public class Util {
         return null;
     }
 
+    public static boolean isPointWithinBox(int x, int y, int bx, int by, int bw, int bh) {
+        return x >= bx && x <= (bx + bw) && y >= by && y <= (by + bh);
+    }
+
     // public static void loadComponents() {
     //     List<String> order = load("backup_order.txt");
     //     // File folder = new File("res/components/");

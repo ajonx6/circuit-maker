@@ -1,4 +1,8 @@
 fulladder
+96
+52
+ff00ff
+ffffff
 c xor 1
 c and 2
 c xor 3

@@ -38,8 +38,8 @@ public class Renderer {
         fillRect(0, 0, Game.WIDTH, Game.HEIGHT, colour);
     }
 
-    public void drawCircuit(int x, int y, int w, int h, String name, int colour) {
-        drawCircuit(name, x, y, w, h, colour, 0xffffff);
+    public void drawCircuit(String name, int x, int y, int width, int height, int compColour) {
+        drawCircuit(name, x, y, width, height, compColour, 0xffffff);
     }
 
     public void drawCircuit(String name, int x, int y, int width, int height, int compColour, int textColour) {

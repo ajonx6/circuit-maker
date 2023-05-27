@@ -2,7 +2,7 @@ package circuit.components;
 
 public class ANDGate extends Circuit {
     public ANDGate() {
-        super("and");
+        super("and", 42, 40, 0x6C58A0, 0xFFFFFF);
         addPin(new Pin(0, 0), Pin.INPUT);
         addPin(new Pin(1, 0), Pin.INPUT);
         addPin(new Pin(2, 0), Pin.OUTPUT);

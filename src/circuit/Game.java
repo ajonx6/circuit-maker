@@ -18,7 +18,7 @@ public class Game extends Canvas implements Runnable {
 
     public static final int WIDTH = 800;
     public static final int HEIGHT = 600;
-    public static final int CIRCUIT_LIST_HEIGHT = 110;
+    public static final int CIRCUIT_LIST_HEIGHT = 70;
     public static final String TITLE = "Circuit Visualiser";
     public static final double FPS = 600.0;
 
@@ -31,24 +31,10 @@ public class Game extends Canvas implements Runnable {
     public Editor editor;
 
     private Game() {
+        Circuit.loadAllCircuits();
         renderer = Renderer.getInstance();
         editor = new Editor();
-        editor.initIOPins(2, 3);
-        
-        Circuit.loadAllCircuits();
-        // Circuit fulladder = Circuit.CIRCUITS.get("fulladder").copy();
-        // fulladder.print();
-        //
-        // Scanner scanner = new Scanner(System.in);
-        // while (true) {
-        //     String line = scanner.nextLine();
-        //     if (line.equals("done")) break;
-        //     int pinID = Integer.parseInt(line);
-        //     fulladder.getInputPins().get(pinID).setState(!fulladder.getInputPins().get(pinID).getState());
-        //     fulladder.tick();
-        //     System.out.println("\n\n");
-        //     fulladder.print();
-        // }
+        editor.initIOPins(9, 5);
         
         KeyInput ki = new KeyInput();
         MouseInput mi = new MouseInput();
@@ -149,6 +135,7 @@ public class Game extends Canvas implements Runnable {
         renderer.fillRect(0, 0, WIDTH, HEIGHT - CIRCUIT_LIST_HEIGHT, 0x555555);
         renderer.fillRect(0, HEIGHT - CIRCUIT_LIST_HEIGHT, WIDTH, HEIGHT, 0x777777);
         
+        editor.generateCircuitListPositions(renderer);
         editor.render(renderer);
 
         renderer.finish();

@@ -2,7 +2,7 @@ package circuit.components;
 
 public class NOTGate extends Circuit {
     public NOTGate() {
-        super("not");
+        super("not", 42, 40, 0xAD6685, 0xFFFFFF);
         addPin(new Pin(0, 0), Pin.INPUT);
         addPin(new Pin(1, 0), Pin.OUTPUT);
     }

@@ -1,4 +1,8 @@
 xor
+42
+40
+00ffff
+0
 c nand 1
 c nand 2
 c nand 3

@@ -1,4 +1,8 @@
 nand
+56
+40
+ffff00
+0
 c and 1
 c not 2
 p I

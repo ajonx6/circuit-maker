@@ -11,6 +11,8 @@ public class Circuit {
     public static final HashMap<String, Circuit> CIRCUITS = new HashMap<>();
 
     protected String name;
+    protected int width, height;
+    protected int circuitColor, textColor;
     protected int circuitID;
     protected int nextCircuitId;
     protected Circuit parent = null;
@@ -21,8 +23,12 @@ public class Circuit {
     protected List<Wire> wires = new ArrayList<>();
     protected List<Circuit> circuits = new ArrayList<>();
 
-    public Circuit(String name) {
+    public Circuit(String name, int width, int height, int circuitColor, int textColor) {
         this.name = name;
+        this.width = width;
+        this.height = height;
+        this.circuitColor = circuitColor;
+        this.textColor = textColor;
         this.circuitID = 0;
         this.nextCircuitId = 1;
     }
@@ -51,12 +57,12 @@ public class Circuit {
         return wire;
     }
 
-    public int addCircuit(Circuit circuit) {
+    public Circuit addCircuit(Circuit circuit) {
         circuit.parent = this;
         Circuit child = circuit.copy();
         circuits.add(child);
         addCircuit(child, this);
-        return child.circuitID;
+        return child;
     }
 
     private void addCircuit(Circuit circuit, Circuit top) {
@@ -74,6 +80,10 @@ public class Circuit {
         for (Circuit child : circuit.circuits) {
             addCircuit(child, top);
         }
+        // System.out.println("TESTING PINS: ");
+        // for (Pin p : circuit.pins) {
+        //     System.out.println(p.getIds());
+        // }
     }
 
     public boolean tick() {
@@ -95,6 +105,7 @@ public class Circuit {
             //     nextState.put(wire.getPid2(), getPinByID(wire.getPid2()).setState(getPinByID(wire.getPid1()).getState());
             // }
         }
+
 
         boolean changed = false;
         for (IDPair ids : nextState.keySet()) {
@@ -186,7 +197,7 @@ public class Circuit {
     }
 
     public Circuit copy() {
-        Circuit ret = new Circuit(name);
+        Circuit ret = new Circuit(name, width, height, circuitColor, textColor);
         for (Pin p : pins) {
             ret.addPin(p.copy(), inputPins.contains(p) ? Pin.INPUT : (outputPins.contains(p) ? Pin.OUTPUT : Pin.NONE));
         }
@@ -201,6 +212,26 @@ public class Circuit {
 
     public Circuit getParent() {
         return parent;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public int getCircuitColor() {
+        return circuitColor;
+    }
+
+    public int getTextColor() {
+        return textColor;
     }
 
     public List<Pin> getInputPins() {
@@ -236,9 +267,9 @@ public class Circuit {
 
     public static void loadCircuit(String name) {
         List<String> data = Util.load("components/" + name);
-        Circuit circuit = new Circuit(data.get(0));
+        Circuit circuit = new Circuit(data.get(0), Integer.parseInt(data.get(1)), Integer.parseInt(data.get(2)), Integer.parseInt(data.get(3), 16), Integer.parseInt(data.get(4), 16));
         HashMap<Integer, Integer> currCircuits = new HashMap<>();
-        for (int i = 1; i < data.size(); i++) {
+        for (int i = 5; i < data.size(); i++) {
             String[] tokens = data.get(i).split(" ");
             if (tokens[0].equals("p")) {
                 if (tokens[1].equals("I")) circuit.addPin(Pin.INPUT);
@@ -250,7 +281,7 @@ public class Circuit {
                 circuit.addWire(new IDPair(Integer.parseInt(tokens[1]), c1), new IDPair(Integer.parseInt(tokens[3]), c2));
             } else if (tokens[0].equals("c")) {
                 Circuit toAdd = CIRCUITS.get(tokens[1]);
-                int newID = circuit.addCircuit(toAdd);
+                int newID = circuit.addCircuit(toAdd).circuitID;
                 currCircuits.put(Integer.parseInt(tokens[2]), newID);
             }
         }
