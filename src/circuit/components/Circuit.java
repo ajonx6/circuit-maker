@@ -2,13 +2,17 @@ package circuit.components;
 
 import circuit.util.Util;
 
+import java.io.BufferedWriter;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.*;
 
 public class Circuit {
-    public static final HashMap<String, Circuit> CIRCUITS = new HashMap<>();
+    public static final Map<String, Circuit> CIRCUITS = new LinkedHashMap<>();
 
     protected String name;
     protected int width, height;
@@ -80,10 +84,6 @@ public class Circuit {
         for (Circuit child : circuit.circuits) {
             addCircuit(child, top);
         }
-        // System.out.println("TESTING PINS: ");
-        // for (Pin p : circuit.pins) {
-        //     System.out.println(p.getIds());
-        // }
     }
 
     public boolean tick() {
@@ -113,18 +113,18 @@ public class Circuit {
             if (p.getState() != nextState.get(ids)) changed = true;
             p.setState(nextState.get(ids));
         }
-        
+
         for (Circuit circuit : circuits) {
             changed |= circuit.tick();
         }
-        
+
         if (parent == null && changed) tick();
         return changed;
     }
 
     public List<Wire> interactWithPin(Pin pin) {
         List<Wire> wireIDsToDisconnect = new ArrayList<>();
-        
+
         if (inputPins.contains(pin)) {
             pin.flip();
         } else if (!outputPins.contains(pin)) {
@@ -210,6 +210,14 @@ public class Circuit {
         return ret;
     }
 
+    public void reset() {
+        inputPins.clear();
+        outputPins.clear();
+        pins.clear();
+        wires.clear();
+        circuits.clear();
+    }
+
     public Circuit getParent() {
         return parent;
     }
@@ -218,20 +226,40 @@ public class Circuit {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public int getWidth() {
         return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
     }
 
     public int getHeight() {
         return height;
     }
 
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
     public int getCircuitColor() {
         return circuitColor;
     }
 
+    public void setCircuitColor(int circuitColor) {
+        this.circuitColor = circuitColor;
+    }
+
     public int getTextColor() {
         return textColor;
+    }
+
+    public void setTextColor(int textColor) {
+        this.textColor = textColor;
     }
 
     public List<Pin> getInputPins() {
@@ -254,6 +282,62 @@ public class Circuit {
         return circuits;
     }
 
+    public void save() {
+        try {
+            Files.write(Paths.get("res/component_order.txt"), (name + "\n").getBytes(), StandardOpenOption.APPEND);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(name + "\n");
+        sb.append(width + "\n");
+        sb.append(height + "\n");
+        sb.append(Integer.toHexString(circuitColor) + "\n");
+        sb.append(Integer.toHexString(textColor) + "\n");
+
+        HashMap<Circuit, Integer> map = new HashMap<>();
+        HashMap<String, List<Integer>> toAdd = new HashMap<>();
+        int id = 1;
+        for (Circuit c : circuits) {
+            if (!toAdd.containsKey(c.getName())) toAdd.put(c.getName(), new ArrayList<>());
+            toAdd.get(c.getName()).add(id);
+            map.put(c, id++);
+        }
+        for (String name : toAdd.keySet()) {
+            sb.append("c " + name);
+            for (int n : toAdd.get(name)) {
+                sb.append(" " + n);
+            }
+            sb.append("\n");
+        }
+
+        sb.append("p I " + inputPins.size() + "\n");
+        sb.append("p O " + outputPins.size() + "\n");
+        int numNeutral = 0;
+        for (Pin p : pins) {
+            if (!inputPins.contains(p) && !outputPins.contains(p)) numNeutral++;
+        }
+        sb.append("p N " + numNeutral + "\n");
+
+        for (Wire wire : wires) {
+            sb.append("w " + wire.getPid1().getComponentID() + " ");
+            Integer cid = map.get(getCircuitByID(wire.getPid1().getCircuitID()));
+            if (cid == null) cid = 0;
+            sb.append(cid + " ");
+            sb.append(wire.getPid2().getComponentID() + " ");
+            cid = map.get(getCircuitByID(wire.getPid2().getCircuitID()));
+            if (cid == null) cid = 0;
+            sb.append(cid + "\n");
+        }
+
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter("res/components/" + name + ".txt"))) {
+            bw.append(sb.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void loadAllCircuits() {
         CIRCUITS.put("and", new ANDGate());
         CIRCUITS.put("or", new ORGate());
@@ -272,17 +356,22 @@ public class Circuit {
         for (int i = 5; i < data.size(); i++) {
             String[] tokens = data.get(i).split(" ");
             if (tokens[0].equals("p")) {
-                if (tokens[1].equals("I")) circuit.addPin(Pin.INPUT);
-                if (tokens[1].equals("O")) circuit.addPin(Pin.OUTPUT);
-                if (tokens[1].equals("N")) circuit.addPin(Pin.NONE);
+                int amt = Integer.parseInt(tokens[2]);
+                for (int n = 0; n < amt; n++) {
+                    if (tokens[1].equals("I")) circuit.addPin(Pin.INPUT);
+                    if (tokens[1].equals("O")) circuit.addPin(Pin.OUTPUT);
+                    if (tokens[1].equals("N")) circuit.addPin(Pin.NONE);
+                }
             } else if (tokens[0].equals("w")) {
                 int c1 = tokens[2].equals("0") ? 0 : currCircuits.get(Integer.parseInt(tokens[2]));
                 int c2 = tokens[4].equals("0") ? 0 : currCircuits.get(Integer.parseInt(tokens[4]));
                 circuit.addWire(new IDPair(Integer.parseInt(tokens[1]), c1), new IDPair(Integer.parseInt(tokens[3]), c2));
             } else if (tokens[0].equals("c")) {
                 Circuit toAdd = CIRCUITS.get(tokens[1]);
-                int newID = circuit.addCircuit(toAdd).circuitID;
-                currCircuits.put(Integer.parseInt(tokens[2]), newID);
+                for (int n = 2; n < tokens.length; n++) {
+                    int newID = circuit.addCircuit(toAdd).circuitID;
+                    currCircuits.put(Integer.parseInt(tokens[n]), newID);
+                }
             }
         }
         CIRCUITS.put(circuit.name, circuit);

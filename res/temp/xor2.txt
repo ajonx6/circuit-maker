@@ -3,7 +3,7 @@ xor
 36
 3333
 ffffff
-c nand 1 
+c nand 1
 c or 2
 c and 3
 p I 2

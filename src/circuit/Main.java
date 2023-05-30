@@ -22,8 +22,6 @@ public class Main {
 
 		pool.runTask(game);
 
-		// System.out.println(Util.distanceFromLine(4, 5, 2, 1, 7, 2));
-
 		pool.join();
 	}
 }

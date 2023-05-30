@@ -2,7 +2,7 @@ package circuit.components;
 
 public class ORGate extends Circuit {
     public ORGate() {
-        super("or", 42, 40, 0x698958, 0xFFFFFF);
+        super("or", 42, 36, 0x698958, 0xFFFFFF);
         addPin(new Pin(0, 0), Pin.INPUT);
         addPin(new Pin(1, 0), Pin.INPUT);
         addPin(new Pin(2, 0), Pin.OUTPUT);

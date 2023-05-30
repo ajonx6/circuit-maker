@@ -3,8 +3,8 @@ nand
 36
 990099
 ffffff
-c and 1 
-c not 2
+c and
+c not
 p I 2
 p N 0
 p O 1

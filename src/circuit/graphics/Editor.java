@@ -7,6 +7,7 @@ import circuit.components.Wire;
 import circuit.input.MouseInput;
 import circuit.util.Util;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -16,9 +17,9 @@ import java.util.List;
 public class Editor {
     public static final int CIRCUIT_WIDTH_PADDING = 8;
     public static final int PIN_RADIUS = 5;
-    public static final int IOPIN_GAP = 15;
+    public static final int IOPIN_GAP = 18;
 
-    public Circuit currentCircuit = new Circuit("current", 0, 0, 0, 0);
+    public Circuit currentCircuit;
 
     public List<PinGraphic> pins = new ArrayList<>();
     public List<WireGraphic> wires = new ArrayList<>();
@@ -29,6 +30,11 @@ public class Editor {
     public int xOffset = 0;
     public List<CircuitGraphic> circuitList = new ArrayList<>();
 
+    public void init(int i, int o) {
+        currentCircuit = new Circuit("current", 0, 0, 0, 0);
+        initIOPins(i, o);
+    }
+    
     public void initIOPins(int ins, int outs) {
         double startY;
         if (ins % 2 == 0) startY = (Game.HEIGHT - Game.CIRCUIT_LIST_HEIGHT) / 2.0 - (ins / 2 - 0.5) * IOPIN_GAP;
@@ -50,7 +56,7 @@ public class Editor {
         List<PinGraphic> ps = new ArrayList<>();
         
         int numIn = cg.getCircuit().getInputPins().size();
-        int gap = cg.getCircuit().getHeight() / (numIn + 1);
+        int gap = IOPIN_GAP; // cg.getCircuit().getHeight() / (numIn + 1);
         double startY;
         if (numIn % 2 == 0) startY = cg.getY() + cg.getCircuit().getHeight() / 2 - (numIn / 2 - 0.5) * gap;
         else startY = cg.getY() + cg.getCircuit().getHeight() / 2 - (numIn / 2) * gap;
@@ -63,7 +69,7 @@ public class Editor {
 
         
         int numOut = cg.getCircuit().getOutputPins().size();
-        gap = cg.getCircuit().getHeight() / (numOut + 1);
+        gap = IOPIN_GAP; // cg.getCircuit().getHeight() / (numOut + 1);
         if (numOut % 2 == 0) startY = cg.getY() + cg.getCircuit().getHeight() / 2 - (numOut / 2 - 0.5) * gap;
         else startY = cg.getY() + cg.getCircuit().getHeight() / 2 - (numOut / 2) * gap;
         for (int i = 0; i < numOut; i++) {
@@ -198,6 +204,21 @@ public class Editor {
         currentlyHeldCircuit = null;
     }
 
+    public void increaseInputsByOne() {
+        int currentInput = 0;
+        for (int i = currentCircuit.getInputPins().size() - 1; i >= 0; i--) {
+            currentInput |= currentCircuit.getInputPins().get(i).getState() ? 1 : 0;
+            currentInput <<= 1;
+        }
+        currentInput >>= 1;
+        currentInput++;
+        for (int i = 0; i < currentCircuit.getInputPins().size(); i++) {
+            currentCircuit.getInputPins().get(i).setState((currentInput & 0b1) == 1);
+            currentInput >>= 1;
+        }
+        currentCircuit.tick();
+    }
+
     public void render(Renderer renderer) {
         for (CircuitGraphic c : circuits) {
             renderer.drawCircuit(c.getCircuit().getName(), c.getX(), c.getY(), c.getCircuit().getWidth(), c.getCircuit().getHeight(), c.getCircuit().getCircuitColor(), c.getCircuit().getTextColor());
@@ -219,22 +240,29 @@ public class Editor {
             currentlyHeldCircuit.setX(MouseInput.x - currentlyHeldCircuit.getCircuit().getWidth() / 2);
             currentlyHeldCircuit.setY(MouseInput.y - currentlyHeldCircuit.getCircuit().getHeight() / 2);
             renderer.drawCircuit(currentlyHeldCircuit.getCircuit().getName(), currentlyHeldCircuit.getX(), currentlyHeldCircuit.getY(), currentlyHeldCircuit.getCircuit().getWidth(), currentlyHeldCircuit.getCircuit().getHeight(), currentlyHeldCircuit.getCircuit().getCircuitColor(), currentlyHeldCircuit.getCircuit().getTextColor());
-            // List<PinGraphic> ps = generateSelectedCircuitPinGraphics(currentlyHeldCircuit);
-            // for (PinGraphic pg : ps) {
-            //     renderer.drawPin(pg.getX(), pg.getY(), PIN_RADIUS, 0);
-            // }
-            
-            // currentlyHeldPins.clear();
-            // generatePinsForCircuit(currentlyHeldCircuit, currentlyHeldPins, 0);
-            
-            // for (PinGraphic pg : currentlyHeldPins) {
-            //     renderer.drawPin(pg.x, pg.y, PIN_RADIUS, 0);
-            // }
+            List<PinGraphic> ps = generateSelectedCircuitPinGraphics(currentlyHeldCircuit);
+            for (PinGraphic pg : ps) {
+                renderer.drawPin(pg.getX(), pg.getY(), PIN_RADIUS, 0);
+            }
         }
 
 
         for (CircuitGraphic cg : circuitList) {
             renderer.drawCircuit(cg.getCircuit().getName(), cg.getX(), cg.getY(), cg.getCircuit().getWidth(), cg.getHeight(), cg.getCircuit().getCircuitColor(), cg.getCircuit().getTextColor());
         }
+    }
+
+    public void newEditor() {
+        String res = JOptionPane.showInputDialog("Enter number of inputs and outputs (i o)");
+        if (res == null) return;
+        pins.clear();
+        wires.clear();
+        circuits.clear();
+        circuitList.clear();
+        xOffset = 0;
+        currentlyHeldCircuit = null;
+        startDrawLine = null;
+        String[] tokens = res.split(" ");
+        init(Integer.parseInt(tokens[0]), Integer.parseInt(tokens[1]));
     }
 }

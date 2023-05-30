@@ -11,7 +11,6 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferStrategy;
-import java.util.Scanner;
 
 public class Game extends Canvas implements Runnable {
     private static final long serialVersionUID = 1L;
@@ -34,7 +33,7 @@ public class Game extends Canvas implements Runnable {
         Circuit.loadAllCircuits();
         renderer = Renderer.getInstance();
         editor = new Editor();
-        editor.initIOPins(9, 5);
+        editor.init(2, 1);
         
         KeyInput ki = new KeyInput();
         MouseInput mi = new MouseInput();
@@ -115,6 +114,87 @@ public class Game extends Canvas implements Runnable {
         if (MouseInput.isPressed(MouseEvent.BUTTON3)) {
             editor.event(MouseEvent.BUTTON3, "PRESS");
         }
+        
+        // Prints the truth table for the circuit
+        if (KeyInput.wasPressed(KeyEvent.VK_T)) {
+            for (Pin p : editor.currentCircuit.getInputPins()) {
+                p.setState(true);
+            }
+            editor.currentCircuit.tick();
+            
+            StringBuilder sb = new StringBuilder();
+            String top = "";
+            for (int i = 0; i < editor.currentCircuit.getInputPins().size(); i++) {
+                top += "I_" + i + "|";
+            }
+            top += "|";
+            for (int i = 0; i < editor.currentCircuit.getOutputPins().size(); i++) {
+                top += "|O_" + i;
+            }
+            top += "\n";
+            sb.append(top);
+            
+            for (int i = 0; i < top.length() - 1; i++) {
+                sb.append("=");
+            }
+            sb.append("\n");
+            
+            for (int i = 0; i < (int) Math.pow(2, editor.currentCircuit.getInputPins().size()); i++) {
+                editor.increaseInputsByOne();
+                String toAdd = "";
+                for (Pin p : editor.currentCircuit.getInputPins()) {
+                    toAdd += " " + (p.getState() ? 1 : 0) + " |";
+                }
+                toAdd += "|";
+                for (Pin p : editor.currentCircuit.getOutputPins()) {
+                    toAdd += "| " + (p.getState() ? 1 : 0) + " ";
+                }
+                sb.append(toAdd + "\n");
+            }
+            editor.increaseInputsByOne();
+            System.out.println(sb);
+        }
+        
+        // Increase inputs by 0b1
+        if (KeyInput.wasPressed(KeyEvent.VK_P)) {
+            editor.increaseInputsByOne();
+        }
+
+        // Save component
+        if (KeyInput.wasPressed(KeyEvent.VK_S)) {
+            String name = JOptionPane.showInputDialog("Circuit Name:");
+            Color compCol = JColorChooser.showDialog(frame, "Choose Circuit Colour", Color.WHITE);
+            Color textCol = JColorChooser.showDialog(frame, "Choose Circuit Text Colour", Color.WHITE);
+            
+            for (Pin p : editor.currentCircuit.getInputPins()) {
+                p.setState(false);
+            }
+            editor.currentCircuit.tick();
+            
+            editor.currentCircuit.setName(name);
+            editor.currentCircuit.setWidth(Math.max(renderer.g.getFontMetrics().stringWidth(name) * 2, 40));
+            editor.currentCircuit.setHeight(Editor.IOPIN_GAP * Math.max(editor.currentCircuit.getInputPins().size(), editor.currentCircuit.getOutputPins().size()));
+            editor.currentCircuit.setCircuitColor(compCol.getRGB() & 0xffffff);
+            editor.currentCircuit.setTextColor(textCol.getRGB() & 0xffffff);
+
+            editor.currentCircuit.save();
+            Circuit.CIRCUITS.put(name, editor.currentCircuit);
+            
+            // System.exit(0);
+            editor.newEditor();
+            
+            // CircuitList.circuitList.add(editor.currentCircuit);
+            // for (Pin p : editor.currentCircuit.pins.values()) {
+            //     p.set(false);
+            // }
+            // editor.currentCircuit.calculateHeight();
+            // editor.newEditor();
+        }
+        
+        // New editor
+        if (KeyInput.wasPressed(KeyEvent.VK_N)) {
+            editor.newEditor();
+        }
 
         KeyInput.tick();
         MouseInput.tick(Time.getFrameTimeInSeconds());
@@ -122,7 +202,7 @@ public class Game extends Canvas implements Runnable {
 
     public void render() {
         try {
-            Thread.sleep(100);
+            Thread.sleep(20);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
