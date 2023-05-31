@@ -1,0 +1,14 @@
+nor
+40
+36
+66cc
+ffffff
+c not 1
+c or 2
+p I 2
+p O 1
+p N 0
+w 0 0 0 2
+w 1 0 1 2
+w 2 2 0 1
+w 1 1 2 0

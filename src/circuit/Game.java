@@ -11,9 +11,10 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferStrategy;
+import java.io.Serial;
 
 public class Game extends Canvas implements Runnable {
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     public static final int WIDTH = 800;
     public static final int HEIGHT = 600;
@@ -22,7 +23,6 @@ public class Game extends Canvas implements Runnable {
     public static final double FPS = 600.0;
 
     private static Game instance;
-    private static boolean pause = false;
 
     public JFrame frame;
     public boolean running;
@@ -101,63 +101,62 @@ public class Game extends Canvas implements Runnable {
 
     public void tick() {
         if (KeyInput.wasPressed(KeyEvent.VK_ESCAPE)) System.exit(0);
+        double delta = Time.getFrameTimeInSeconds();
         
         if (MouseInput.wasPressed(MouseEvent.BUTTON1)) {
-            editor.event(MouseEvent.BUTTON1, "CLICK");
+            editor.event(MouseEvent.BUTTON1, "CLICK", delta);
         }
         if (MouseInput.wasPressed(MouseEvent.BUTTON2)) {
-            editor.event(MouseEvent.BUTTON2, "CLICK");
+            editor.event(MouseEvent.BUTTON2, "CLICK", delta);
         }
         if (MouseInput.wasPressed(MouseEvent.BUTTON3)) {
-            editor.event(MouseEvent.BUTTON3, "CLICK");
+            editor.event(MouseEvent.BUTTON3, "CLICK", delta);
         }
         if (MouseInput.isPressed(MouseEvent.BUTTON3)) {
-            editor.event(MouseEvent.BUTTON3, "PRESS");
+            editor.event(MouseEvent.BUTTON3, "PRESS", delta);
         }
         
-        // Prints the truth table for the circuit
-        if (KeyInput.wasPressed(KeyEvent.VK_T)) {
-            for (Pin p : editor.currentCircuit.getInputPins()) {
-                p.setState(true);
-            }
-            editor.currentCircuit.tick();
-            
-            StringBuilder sb = new StringBuilder();
-            String top = "";
-            for (int i = 0; i < editor.currentCircuit.getInputPins().size(); i++) {
-                top += "I_" + i + "|";
-            }
-            top += "|";
-            for (int i = 0; i < editor.currentCircuit.getOutputPins().size(); i++) {
-                top += "|O_" + i;
-            }
-            top += "\n";
-            sb.append(top);
-            
-            for (int i = 0; i < top.length() - 1; i++) {
-                sb.append("=");
-            }
-            sb.append("\n");
-            
-            for (int i = 0; i < (int) Math.pow(2, editor.currentCircuit.getInputPins().size()); i++) {
-                editor.increaseInputsByOne();
-                String toAdd = "";
-                for (Pin p : editor.currentCircuit.getInputPins()) {
-                    toAdd += " " + (p.getState() ? 1 : 0) + " |";
-                }
-                toAdd += "|";
-                for (Pin p : editor.currentCircuit.getOutputPins()) {
-                    toAdd += "| " + (p.getState() ? 1 : 0) + " ";
-                }
-                sb.append(toAdd + "\n");
-            }
-            editor.increaseInputsByOne();
-            System.out.println(sb);
-        }
-        
+        /* Prints the truth table for the circuit
+        // if (KeyInput.wasPressed(KeyEvent.VK_T)) {
+        //     for (Pin p : editor.currentCircuit.getInputPins()) {
+        //         p.setState(true);
+        //     }
+        //     editor.currentCircuit.tick();
+        //    
+        //     StringBuilder sb = new StringBuilder();
+        //     StringBuilder top = new StringBuilder();
+        //     for (int i = 0; i < editor.currentCircuit.getInputPins().size(); i++) {
+        //         top.append("I_").append(i).append("|");
+        //     }
+        //     top.append("|");
+        //     for (int i = 0; i < editor.currentCircuit.getOutputPins().size(); i++) {
+        //         top.append("|O_").append(i);
+        //     }
+        //     top.append("\n");
+        //     sb.append(top);
+        //
+        //     sb.append("=".repeat(Math.max(0, top.length() - 1)));
+        //     sb.append("\n");
+        //    
+        //     for (int i = 0; i < (int) Math.pow(2, editor.currentCircuit.getInputPins().size()); i++) {
+        //         editor.increaseInputsByOne();
+        //         StringBuilder toAdd = new StringBuilder();
+        //         for (Pin p : editor.currentCircuit.getInputPins()) {
+        //             toAdd.append(" ").append(p.getState() ? 1 : 0).append(" |");
+        //         }
+        //         toAdd.append("|");
+        //         for (Pin p : editor.currentCircuit.getOutputPins()) {
+        //             toAdd.append("| ").append(p.getState() ? 1 : 0).append(" ");
+        //         }
+        //         sb.append(toAdd).append("\n");
+        //     }
+        //     editor.increaseInputsByOne();
+        //     System.out.println(sb);
+        // }*/ 
+                
         // Increase inputs by 0b1
         if (KeyInput.wasPressed(KeyEvent.VK_P)) {
-            editor.increaseInputsByOne();
+            editor.increaseInputsByOne(delta);
         }
 
         // Save component
@@ -169,7 +168,7 @@ public class Game extends Canvas implements Runnable {
             for (Pin p : editor.currentCircuit.getInputPins()) {
                 p.setState(false);
             }
-            editor.currentCircuit.tick();
+            editor.currentCircuit.tick(delta);
             
             editor.currentCircuit.setName(name);
             editor.currentCircuit.setWidth(Math.max(renderer.g.getFontMetrics().stringWidth(name) * 2, 40));
@@ -180,7 +179,6 @@ public class Game extends Canvas implements Runnable {
             editor.currentCircuit.save();
             Circuit.CIRCUITS.put(name, editor.currentCircuit);
             
-            // System.exit(0);
             editor.newEditor();
             
             // CircuitList.circuitList.add(editor.currentCircuit);
@@ -196,8 +194,9 @@ public class Game extends Canvas implements Runnable {
             editor.newEditor();
         }
 
+        editor.currentCircuit.tick(delta);
         KeyInput.tick();
-        MouseInput.tick(Time.getFrameTimeInSeconds());
+        MouseInput.tick(delta);
     }
 
     public void render() {
@@ -215,7 +214,7 @@ public class Game extends Canvas implements Runnable {
         renderer.fillRect(0, 0, WIDTH, HEIGHT - CIRCUIT_LIST_HEIGHT, 0x555555);
         renderer.fillRect(0, HEIGHT - CIRCUIT_LIST_HEIGHT, WIDTH, HEIGHT, 0x777777);
         
-        editor.generateCircuitListPositions(renderer);
+        editor.generateCircuitListPositions();
         editor.render(renderer);
 
         renderer.finish();

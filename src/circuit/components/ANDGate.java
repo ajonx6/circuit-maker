@@ -8,10 +8,19 @@ public class ANDGate extends Circuit {
         addPin(new Pin(2, 0), Pin.OUTPUT);
     }
     
-    public boolean tick() {
-        boolean prev = pins.get(2).getState();
+    public void tick(double delta) {
         pins.get(2).setState(pins.get(0).getState() && pins.get(1).getState());
-        return prev ^ pins.get(2).getState();
+
+        // if (pins.get(2).shouldBeOn()) pins.get(2).incrementDelayTime(delta);
+        // else pins.get(2).setDelayTime(0);
+        //
+        // pins.get(2).setShouldBeOn(pins.get(0).getState() && pins.get(1).getState());
+        // if (pins.get(2).shouldTurnOn()) {
+        //     pins.get(2).setState(true);
+        //     pins.get(2).setDelayTime(pins.get(2).getPinDelay());
+        // } else {
+        //     pins.get(2).setState(false);
+        // }
     }
     
     public ANDGate copy() {

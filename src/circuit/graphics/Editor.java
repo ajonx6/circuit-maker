@@ -8,16 +8,15 @@ import circuit.input.MouseInput;
 import circuit.util.Util;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class Editor {
     public static final int CIRCUIT_WIDTH_PADDING = 8;
     public static final int PIN_RADIUS = 5;
     public static final int IOPIN_GAP = 18;
+    public static final int CIRCUIT_DELETE_PADDING = 3;
 
     public Circuit currentCircuit;
 
@@ -37,15 +36,15 @@ public class Editor {
     
     public void initIOPins(int ins, int outs) {
         double startY;
-        if (ins % 2 == 0) startY = (Game.HEIGHT - Game.CIRCUIT_LIST_HEIGHT) / 2.0 - (ins / 2 - 0.5) * IOPIN_GAP;
-        else startY = (Game.HEIGHT - Game.CIRCUIT_LIST_HEIGHT) / 2.0 - ins / 2 * IOPIN_GAP;
+        if (ins % 2 == 0) startY = (Game.HEIGHT - Game.CIRCUIT_LIST_HEIGHT) / 2.0 - (ins / 2.0 - 0.5) * IOPIN_GAP;
+        else startY = (Game.HEIGHT - Game.CIRCUIT_LIST_HEIGHT) / 2.0 - ins / 2.0 * IOPIN_GAP;
         for (int i = 0; i < ins; i++) {
             Pin p = currentCircuit.addPin(Pin.INPUT);
             pins.add(new PinGraphic(p, (int) (PIN_RADIUS * 1.5), (int) (startY + i * IOPIN_GAP)));
         }
 
-        if (outs % 2 == 0) startY = (Game.HEIGHT - Game.CIRCUIT_LIST_HEIGHT) / 2.0 - (outs / 2 - 0.5) * IOPIN_GAP;
-        else startY = (Game.HEIGHT - Game.CIRCUIT_LIST_HEIGHT) / 2.0 - outs / 2 * IOPIN_GAP;
+        if (outs % 2 == 0) startY = (Game.HEIGHT - Game.CIRCUIT_LIST_HEIGHT) / 2.0 - (outs / 2.0 - 0.5) * IOPIN_GAP;
+        else startY = (Game.HEIGHT - Game.CIRCUIT_LIST_HEIGHT) / 2.0 - outs / 2.0 * IOPIN_GAP;
         for (int i = 0; i < outs; i++) {
             Pin p = currentCircuit.addPin(Pin.OUTPUT);
             pins.add(new PinGraphic(p, Game.WIDTH - (int) (PIN_RADIUS * 1.5), (int) (startY + i * IOPIN_GAP)));
@@ -56,20 +55,17 @@ public class Editor {
         List<PinGraphic> ps = new ArrayList<>();
         
         int numIn = cg.getCircuit().getInputPins().size();
-        int gap = IOPIN_GAP; // cg.getCircuit().getHeight() / (numIn + 1);
+        int gap = IOPIN_GAP;//cg.getCircuit().getHeight() / (numIn + 1);
         double startY;
         if (numIn % 2 == 0) startY = cg.getY() + cg.getCircuit().getHeight() / 2 - (numIn / 2 - 0.5) * gap;
         else startY = cg.getY() + cg.getCircuit().getHeight() / 2 - (numIn / 2) * gap;
         for (int i = 0; i < numIn; i++) {
             PinGraphic pg = new PinGraphic(cg.getCircuit().getInputPins().get(i), cg.getX(), (int) (startY + i * gap));
             ps.add(pg);
-            // System.out.println("PINS: (" + cg.getCircuit().getName() + ") " + pg.getPin().getIds() + " / " + numIn);
         }
-        // System.out.println("DONE");
-
         
         int numOut = cg.getCircuit().getOutputPins().size();
-        gap = IOPIN_GAP; // cg.getCircuit().getHeight() / (numOut + 1);
+        gap = IOPIN_GAP;//cg.getCircuit().getHeight() / (numOut + 1);
         if (numOut % 2 == 0) startY = cg.getY() + cg.getCircuit().getHeight() / 2 - (numOut / 2 - 0.5) * gap;
         else startY = cg.getY() + cg.getCircuit().getHeight() / 2 - (numOut / 2) * gap;
         for (int i = 0; i < numOut; i++) {
@@ -80,7 +76,7 @@ public class Editor {
         return ps;
     }
 
-    public void generateCircuitListPositions(Renderer renderer) {
+    public void generateCircuitListPositions() {
         int xo = CIRCUIT_WIDTH_PADDING;
         for (Circuit c : Circuit.CIRCUITS.values()) {
             // int width = renderer.g.getFontMetrics().stringWidth(c.getName()) * 2;
@@ -91,24 +87,26 @@ public class Editor {
         }
     }
 
-    public void event(int button, String type) {
+    public void event(int button, String type, double delta) {
         if (type.equals("CLICK")) {
             if (MouseInput.y <= Game.HEIGHT - Game.CIRCUIT_LIST_HEIGHT) {
                 if (button == MouseEvent.BUTTON1) {
-                    if (currentlyHeldCircuit != null) placeCircuit();
+                    if (currentlyHeldCircuit != null) placeCircuit(delta);
                     else drawWireEvent();
                 }
-                else if (button == MouseEvent.BUTTON3) deletePinWireEvent();
+                else if (button == MouseEvent.BUTTON3) deleteEvent();
             } else {
-                if (startDrawLine != null) return;
-                else if (button == MouseEvent.BUTTON1) selectCircuitEvent();
+                if (button == MouseEvent.BUTTON1) selectCircuitEvent();
                 else if (button == MouseEvent.BUTTON3) cancelAllSelected();
             }
         }
-        currentCircuit.tick();
+        // else if (type.equals("PRESS")) {
+        //     if (button == MouseEvent.BUTTON3) deleteEvent();
+        // }
+        // currentCircuit.tick(delta);
     }
     
-    public void placeCircuit() {
+    public void placeCircuit(double delta) {
         currentlyHeldCircuit.setX(MouseInput.x - currentlyHeldCircuit.getCircuit().getWidth() / 2);
         currentlyHeldCircuit.setY(MouseInput.y - currentlyHeldCircuit.getCircuit().getHeight() / 2);
         // circuits.add(currentlyHeldCircuit);
@@ -119,13 +117,9 @@ public class Editor {
         // currentlyHeldPins.clear();
         CircuitGraphic cg = new CircuitGraphic(newCircuit, MouseInput.x - currentlyHeldCircuit.getCircuit().getWidth() / 2, MouseInput.y - currentlyHeldCircuit.getCircuit().getHeight() / 2, newCircuit.getWidth(), newCircuit.getHeight());
         List<PinGraphic> ps = generateSelectedCircuitPinGraphics(cg);
-        // System.out.println("PLACING CIRCUIT");
-        // for (PinGraphic p : ps) {
-        //     System.out.println("PINPINPIN: " + p.getPin().getIds());
-        // }
         pins.addAll(ps);
         circuits.add(cg);
-        currentlyHeldCircuit = null;
+        // currentlyHeldCircuit = null;
     }
     
     public void drawWireEvent() {
@@ -157,19 +151,15 @@ public class Editor {
         }
     }
     
-    public void deletePinWireEvent() {
+    public void deleteEvent() {
         if (startDrawLine != null || currentlyHeldCircuit != null) cancelAllSelected();
         else {
             for (PinGraphic pg : pins) {
                 if (Util.distanceBetweenPoints(pg.getX(), pg.getY(), MouseInput.x, MouseInput.y) < PIN_RADIUS) {
-                    List<Wire> wiresToDelete = currentCircuit.interactWithPin(pg.getPin());
+                    List<Wire> wiresToDelete = currentCircuit.removePin(pg.getPin());
                     if (pg.getPin().getType() == Pin.NONE) {
                         pins.remove(pg);
-                        Iterator<WireGraphic> it = wires.iterator();
-                        while (it.hasNext()) {
-                            WireGraphic wg = it.next();
-                            if (wiresToDelete.contains(wg.getWire())) it.remove();
-                        }
+                        wires.removeIf(wg -> wiresToDelete.contains(wg.getWire()));
                     }
                     return;
                 }
@@ -179,13 +169,25 @@ public class Editor {
                 if (Util.distanceFromLine(wg.getX1(), wg.getY1(), wg.getX2(), wg.getY2(), MouseInput.x, MouseInput.y) < Renderer.WIRE_WIDTH) {
                     currentCircuit.removeWire(wg.getWire());
                     wires.remove(wg);
-                    break;
+                    return;
+                }
+            }
+            
+            for (CircuitGraphic cg : circuits) {
+                if (Util.isPointWithinBox(MouseInput.x, MouseInput.y, cg.getX() + CIRCUIT_DELETE_PADDING, cg.getY() + CIRCUIT_DELETE_PADDING, cg.getWidth() - 2 * CIRCUIT_DELETE_PADDING, cg.getHeight() - 2 * CIRCUIT_DELETE_PADDING)) {
+                    List<Wire> wiresToDelete = currentCircuit.removeCircuit(cg.getCircuit());
+                    circuits.remove(cg);
+                    wires.removeIf(wg -> wiresToDelete.contains(wg.getWire()));
+                    pins.removeIf(pg -> pg.getPin().getIds().getCircuitID() == cg.getCircuit().getCircuitID());
+                    return;
                 }
             }
         }
     }
     
     public void selectCircuitEvent() {
+        if (startDrawLine != null) return;
+
         // if (currentlyHeldSSD == null) {
         for (CircuitGraphic cg : circuitList) {
             if (Util.isPointWithinBox(MouseInput.x, MouseInput.y, cg.getX() - CIRCUIT_WIDTH_PADDING + xOffset, cg.getY() - CIRCUIT_WIDTH_PADDING, cg.getWidth() + 2 * CIRCUIT_WIDTH_PADDING, cg.getHeight() + 2 * CIRCUIT_WIDTH_PADDING)) {
@@ -204,7 +206,7 @@ public class Editor {
         currentlyHeldCircuit = null;
     }
 
-    public void increaseInputsByOne() {
+    public void increaseInputsByOne(double delta) {
         int currentInput = 0;
         for (int i = currentCircuit.getInputPins().size() - 1; i >= 0; i--) {
             currentInput |= currentCircuit.getInputPins().get(i).getState() ? 1 : 0;
@@ -216,7 +218,7 @@ public class Editor {
             currentCircuit.getInputPins().get(i).setState((currentInput & 0b1) == 1);
             currentInput >>= 1;
         }
-        currentCircuit.tick();
+        currentCircuit.tick(delta);
     }
 
     public void render(Renderer renderer) {

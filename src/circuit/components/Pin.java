@@ -1,7 +1,5 @@
 package circuit.components;
 
-import org.w3c.dom.ls.LSOutput;
-
 public class Pin {
     public static final int NONE = 0;
     public static final int INPUT = 1;
@@ -10,6 +8,10 @@ public class Pin {
     private IDPair ids;
     private int type = NONE;
     private boolean state = false;
+    private boolean shouldBeOn = false;
+    
+    private double pinDelay;
+    private double delayTime = 0;
 
     public Pin() {
     }
@@ -35,6 +37,14 @@ public class Pin {
         ids = new IDPair(id, cid);
     }
 
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    public boolean getState() {
+        return state;
+    }
+
     public void setState(boolean state) {
         this.state = state;
     }
@@ -43,12 +53,40 @@ public class Pin {
         this.state = !this.state;
     }
 
-    public boolean getState() {
-        return state;
+    public boolean shouldBeOn() {
+        return shouldBeOn;
     }
 
+    public void setShouldBeOn(boolean shouldBeOn) {
+        this.shouldBeOn = shouldBeOn;
+    }
+    
     public int getType() {
         return type;
+    }
+
+    public double getPinDelay() {
+        return pinDelay;
+    }
+
+    public void setPinDelay(double pinDelay) {
+        this.pinDelay = pinDelay;
+    }
+
+    public void incrementDelayTime(double delta) {
+        this.delayTime += delta;
+    }
+    
+    public void setDelayTime(double d) {
+        this.delayTime = d;
+    }
+
+    public double getDelayTime() {
+        return delayTime;
+    }
+
+    public boolean shouldTurnOn() {
+        return shouldBeOn && this.delayTime >= this.pinDelay;
     }
 
     public Pin copy() {

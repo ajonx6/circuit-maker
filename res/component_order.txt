@@ -1,5 +1,8 @@
 nand
+nor
 xor
 adder
 4b-adder
 alu
+rs-nor
+d-latch
