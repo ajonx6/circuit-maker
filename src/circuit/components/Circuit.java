@@ -27,9 +27,6 @@ public class Circuit {
     protected List<Wire> wires = new ArrayList<>();
     protected List<Circuit> circuits = new ArrayList<>();
 
-    // protected double gateDelay = 0;
-    // protected double[] delays;
-
     public Circuit(String name, int width, int height, int circuitColor, int textColor) {
         this.name = name;
         this.width = width;
@@ -140,8 +137,6 @@ public class Circuit {
     }
 
     public void generateGateDelay() {
-        // gateDelay = Math.random() * MAX_DELAY;
-        // delays = new double[outputPins.size()];
         for (Pin p : pins) {
             if (inputPins.contains(p) || outputPins.contains(p)) continue;
             p.setPinDelay(Math.random() * MAX_DELAY);
@@ -149,69 +144,39 @@ public class Circuit {
     }
 
     public void tick(double delta) {
-        boolean changed;
-        do {
-            changed = false;
-            HashMap<IDPair, Boolean> nextState = new HashMap<>();
-            for (Wire wire : wires) {
-                if (!nextState.containsKey(wire.getPid2())) nextState.put(wire.getPid2(), false);
-                nextState.put(wire.getPid2(), nextState.get(wire.getPid2()) || getPinByID(wire.getPid1()).getState());
-            }
+        HashMap<IDPair, Boolean> nextState = new HashMap<>();
+        for (Wire wire : wires) {
+            if (!nextState.containsKey(wire.getPid2())) nextState.put(wire.getPid2(), false);
+            nextState.put(wire.getPid2(), nextState.get(wire.getPid2()) || getPinByID(wire.getPid1()).getState());
+        }
+        for (Pin p : pins) {
+            if (!inputPins.contains(p) && !nextState.containsKey(p.getIds())) nextState.put(p.getIds(), false);
+        }
+
+        if (circuitID > 0) {
             for (Pin p : pins) {
-                if (!inputPins.contains(p) && !nextState.containsKey(p.getIds())) nextState.put(p.getIds(), false);
+                if (inputPins.contains(p) || outputPins.contains(p)) continue;
+                if (p.shouldBeOn()) p.incrementDelayTime(delta);
+                else p.setDelayTime(0);
             }
+        }
 
-            if (circuitID > 0) {
-                for (Pin p : pins) {
-                    if (inputPins.contains(p) || outputPins.contains(p)) continue;
-                    if (p.shouldBeOn()) p.incrementDelayTime(delta);
-                    else p.setDelayTime(0);
+        for (IDPair ids : nextState.keySet()) {
+            Pin p = getPinByID(ids);
+            if (circuitID > 0 && !inputPins.contains(p) && !outputPins.contains(p)) {
+                p.setShouldBeOn(nextState.get(ids));
+                if (p.shouldTurnOn()) {
+                    p.setState(true);
+                    p.setDelayTime(p.getPinDelay());
+                } else {
+                    p.setState(false);
                 }
-            }
+            } else p.setState(nextState.get(ids));
+        }
 
-            // if (name.equals("nor")) {
-            //     System.out.println(name + " (" + circuitID + "): ");
-            //     for (IDPair id : nextState.keySet()) {
-            //         Pin p = getPinByID(id);
-            //         Circuit c = getCircuitByID(id.getCircuitID());
-            //         System.out.println("\t" + id + " (" + (c != null ? c.getName() : "") + ") " + p.getState() + " " + p.shouldBeOn()  + " " + p.getPinDelay() + " " + p.getDelayTime());
-            //     }
-            //     System.out.println("============================");
-            // }
-
-            for (IDPair ids : nextState.keySet()) {
-                Pin p = getPinByID(ids);
-                // if (name.equals("rs-nor") || name.equals("nor")) System.out.println(name + " " + circuitID + " " + p.getIds() + " " + ids + " " + p.getType() + " " + p.getState() + " " + p.shouldBeOn() + " " + nextState.get(ids));
-                // if (name.equals("rs-nor") || name.equals("nor")) System.out.println(name + " " + circuitID + " " + p.getType() + " " + p.shouldBeOn() + " " + nextState.get(ids));
-                // if (name.equals("rs-nor") || name.equals("nor")) System.out.println(p.getType() + " " + p.getState() + " " + nextState.get(ids));
-                // if (circuitID > 0 && p.getType() == Pin.OUTPUT && p.shouldBeOn() != nextState.get(ids)) changed |= true;
-                // else if (p.getType() != Pin.OUTPUT && p.getState() != nextState.get(ids)) changed |= true;
-                // if (name.equals("rs-nor") || name.equals("nor")) System.out.println(changed);
-                if (circuitID > 0 && !inputPins.contains(p) && !outputPins.contains(p)) {
-                    p.setShouldBeOn(nextState.get(ids));
-                    // p.setState(p.shouldBeOn());
-                    // if (p.shouldBeOn() && p.delays[outputPins.indexOf(p)] >= gateDelay) {
-                    if (p.shouldTurnOn()) {
-                        p.setState(true);
-                        // p.setdelays[outputPins.indexOf(p)] = gateDelay;
-                        // System.out.println("HEYEYEY1");
-                        p.setDelayTime(p.getPinDelay());
-                    } else {
-                        // System.out.println("HEYEYEY2");
-                        p.setState(false);
-                    }
-                } else p.setState(nextState.get(ids));
-            }
-
-            for (Circuit circuit : circuits) {
-                // changed |= circuit.tick(delta);
-                circuit.tick(delta);
-            }
-
-            // System.out.println(name + " " + circuitID + " " + changed);
-            // if (name.equals("rs-nor") || name.equals("nor")) System.out.println("==========");
-            // if (parent == null && changed) tick(delta);
-        } while (changed);
+        for (Circuit circuit : circuits) {
+            circuit.tick(delta);
+        }
     }
 
     public Pin getPinByID(IDPair ids) {
