@@ -6,3 +6,4 @@ adder
 alu
 rs-nor
 d-latch
+reg

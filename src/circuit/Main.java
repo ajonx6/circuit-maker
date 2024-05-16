@@ -16,7 +16,8 @@ public class Main {
 		game.frame.pack();
 		game.frame.setSize(Game.WIDTH, Game.HEIGHT);
 		game.frame.setResizable(false);
-		game.frame.setLocationRelativeTo(null);
+		game.frame.setLocation(850, 375);
+		// game.frame.setLocationRelativeTo(null);
 		game.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		game.frame.setVisible(true);
 

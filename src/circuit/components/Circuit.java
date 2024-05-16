@@ -143,7 +143,14 @@ public class Circuit {
         }
     }
 
+    double timePerUpdate = 0.002;
+    double time = 0;
+    
     public void tick(double delta) {
+        time += delta;
+        if (time < timePerUpdate) return;
+        time -= timePerUpdate;
+        
         HashMap<IDPair, Boolean> nextState = new HashMap<>();
         for (Wire wire : wires) {
             if (!nextState.containsKey(wire.getPid2())) nextState.put(wire.getPid2(), false);
@@ -156,7 +163,7 @@ public class Circuit {
         if (circuitID > 0) {
             for (Pin p : pins) {
                 if (inputPins.contains(p) || outputPins.contains(p)) continue;
-                if (p.shouldBeOn()) p.incrementDelayTime(delta);
+                if (p.shouldBeOn()) p.incrementDelayTime(timePerUpdate);
                 else p.setDelayTime(0);
             }
         }
