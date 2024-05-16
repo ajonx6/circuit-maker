@@ -162,6 +162,9 @@ public class Game extends Canvas implements Runnable {
         // Save component
         if (KeyInput.wasPressed(KeyEvent.VK_S)) {
             String name = JOptionPane.showInputDialog("Circuit Name:");
+            String strClockId = JOptionPane.showInputDialog("Enter index of clock pin (or -1 if none)");
+            int clockId = -1;
+            if (strClockId.matches("-?\\d+")) clockId = Integer.parseInt(strClockId);
             Color compCol = JColorChooser.showDialog(frame, "Choose Circuit Colour", Color.WHITE);
             Color textCol = JColorChooser.showDialog(frame, "Choose Circuit Text Colour", Color.WHITE);
             
@@ -176,7 +179,7 @@ public class Game extends Canvas implements Runnable {
             editor.currentCircuit.setCircuitColor(compCol.getRGB() & 0xffffff);
             editor.currentCircuit.setTextColor(textCol.getRGB() & 0xffffff);
 
-            editor.currentCircuit.save();
+            editor.currentCircuit.save(clockId);
             Circuit.CIRCUITS.put(name, editor.currentCircuit);
             
             editor.newEditor();

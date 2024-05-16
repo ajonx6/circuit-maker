@@ -9,6 +9,7 @@ public class Pin {
     private int type = NONE;
     private boolean state = false;
     private boolean shouldBeOn = false;
+    private boolean isClockPin = false;
     
     private double pinDelay;
     private double delayTime = 0;
@@ -89,8 +90,17 @@ public class Pin {
         return shouldBeOn && this.delayTime >= this.pinDelay;
     }
 
+    public void setClockPin() {
+        this.isClockPin = true;
+    }
+
+    public boolean isClockPin() {
+        return isClockPin;
+    }
+
     public Pin copy() {
         Pin ret = new Pin(ids.getComponentID(), ids.getCircuitID());
+        if (isClockPin()) ret.setClockPin();
         return ret;
     }
     
