@@ -1,8 +1,8 @@
 package circuit.graphics;
 
-import circuit.components.Pin;
 import circuit.components.Wire;
 
+// Represents a wire displayed on the screen
 public class WireGraphic {
     private Wire wire;
     private int x1, y1;

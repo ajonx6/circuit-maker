@@ -1,16 +1,22 @@
 package circuit.components;
 
+// Represents a pin that connects wires within the circuit
 public class Pin {
     public static final int NONE = 0;
     public static final int INPUT = 1;
     public static final int OUTPUT = 2;
 
     private IDPair ids;
+    // Whether an input pin, output pin or simply an anchor pin
     private int type = NONE;
+    // Whether the pin is on or off
     private boolean state = false;
+    // Whether the pin should be trying to turn on or not
     private boolean shouldBeOn = false;
+    // Whether the pin represents the clock input to a circuit
     private boolean isClockPin = false;
     
+    // Represents the time taken between receiving a 1 and outputting a 1 (gate delay)
     private double pinDelay;
     private double delayTime = 0;
 
@@ -86,6 +92,7 @@ public class Pin {
         return delayTime;
     }
 
+    // Returns if the pin should be on for longer than the pin delay
     public boolean shouldTurnOn() {
         return shouldBeOn && this.delayTime >= this.pinDelay;
     }

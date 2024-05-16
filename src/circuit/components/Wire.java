@@ -1,7 +1,11 @@
 package circuit.components;
 
+// Represents a wire that connects two pins within the circuit
 public class Wire {
+    // ID of the wire
     private IDPair ids;
+    // ID of the two pins within the circuit 
+    // Although can't draw a wire to a circuit 3 levels deep, technically its possible with these ids
     private IDPair pid1, pid2;
 
     public Wire() {}
@@ -25,7 +29,6 @@ public class Wire {
     public void setIds(int id, int cid) {
         ids = new IDPair(id, cid);
     }
-
 
     public IDPair getPid1() {
         return pid1;

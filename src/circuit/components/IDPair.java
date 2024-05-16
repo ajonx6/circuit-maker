@@ -2,8 +2,13 @@ package circuit.components;
 
 import java.util.Objects;
 
+// Represents a unique id relative to the components
 public class IDPair {
+    // Represents the id of the component within the current circuit
+    // This stays the same when added to a parent circuit
     private int componentID;
+    // Represents the id of the circuit this component is in
+    // This is updated when added to a parent circuit
     private int circuitID;
 
     public IDPair(int componentID, int circuitID) {
@@ -27,11 +32,6 @@ public class IDPair {
         this.circuitID = circuitID;
     }
     
-    public String toString() {
-        // return "id=" + componentID + ", cid=" + circuitID;
-        return componentID + "/" + circuitID;
-    }
-    
     public IDPair copy() {
         return new IDPair(componentID, circuitID);
     }
@@ -45,5 +45,10 @@ public class IDPair {
 
     public int hashCode() {
         return Objects.hash(componentID, circuitID);
+    }
+
+    public String toString() {
+        // return "id=" + componentID + ", cid=" + circuitID;
+        return componentID + "/" + circuitID;
     }
 }

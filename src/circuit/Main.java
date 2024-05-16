@@ -1,28 +1,20 @@
 package circuit;
 
 import javax.swing.JFrame;
-import circuit.util.ThreadPool;
-import circuit.util.Util;
 
 public class Main {
 	public static void main(String[] args) {
-		ThreadPool pool = new ThreadPool(2);
-		System.out.println("Running on OS: " + System.getProperty("os.name"));
-
-		Game game = Game.getInstance();
-		game.frame = new JFrame(Game.TITLE);
-		game.frame.setUndecorated(true);
-		game.frame.add(game);
-		game.frame.pack();
-		game.frame.setSize(Game.WIDTH, Game.HEIGHT);
-		game.frame.setResizable(false);
-		game.frame.setLocation(850, 375);
-		// game.frame.setLocationRelativeTo(null);
-		game.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		game.frame.setVisible(true);
-
-		pool.runTask(game);
-
-		pool.join();
+		ProgramManager programManager = new ProgramManager();
+		programManager.frame = new JFrame(ProgramManager.TITLE);
+		programManager.frame.setUndecorated(true);
+		programManager.frame.add(programManager);
+		programManager.frame.pack();
+		programManager.frame.setSize(ProgramManager.WIDTH, ProgramManager.HEIGHT);
+		programManager.frame.setResizable(false);
+		programManager.frame.setLocation(850, 375);
+		programManager.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		programManager.frame.setVisible(true);
+		
+		programManager.start();
 	}
 }

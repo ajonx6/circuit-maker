@@ -2,6 +2,8 @@ package circuit.graphics;
 
 import circuit.components.Circuit;
 
+// Represents a circuit (rectangle and text) displayed on the screen 
+// Color data is stored in the circuit
 public class CircuitGraphic {
     private Circuit circuit;
     private int x, y;

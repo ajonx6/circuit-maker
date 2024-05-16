@@ -1,0 +1,13 @@
+comp_name
+comp_width
+comp_height
+circuit_colour
+text_colour
+c circuit_name cid1 cid2
+...
+p I n
+p O n
+p N n
+[l pid]
+w pid1 cid1 pid2 cid2
+...

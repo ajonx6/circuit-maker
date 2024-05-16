@@ -2,6 +2,7 @@ package circuit.graphics;
 
 import circuit.components.Pin;
 
+// Represents a pin displayed on the screen
 public class PinGraphic {
     private Pin pin;
     private int x, y;
